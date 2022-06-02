@@ -1,3 +1,5 @@
+#include "SeqIO/SeqIO.hh"
+
 #include <iostream>
 #include <fstream>
 #include <algorithm>
@@ -25,6 +27,7 @@
 #include "debruijn_hypergraph.hpp"
 #include "algorithm.hpp"
 #include "wt_algorithm.hpp"
+
 
 #include <string>
 #include <sstream>
@@ -90,11 +93,13 @@ int main(int argc, char* argv[]) {
   cerr << "DBG size      : " << dbg_size << " MB" << endl;
   cerr << "Bits per edge : " << bits_per_element(g) << " Bits" << endl;
 
-  ifstream ifs(query_filename);
+  SeqIO::Reader<> in(query_filename);
   vector<string> queries;
   std::string str;
-  while(getline(ifs, str)) {
-    queries.emplace_back(str);
+  while(true){
+    long long len = in.get_next_read_to_buffer();
+    if(len == 0) break;
+    queries.push_back(std::string(in.read_buf));
   }
 
   cerr << "running " << queries.size() << " queries" << endl;
@@ -109,7 +114,7 @@ int main(int argc, char* argv[]) {
     //   cerr << s.substr(0, s.size() - 1) << " " << g.node_label(g._edge_to_node(get<0>(result))) << endl;
   }
   
-  cout << "Total query time us/kmer without I/O:" << (double)total_micros / queries.size() << endl;
+  cout << "Total query time us/kmer without I/O: " << (double)total_micros / queries.size() << endl;
   return 0;
 }
 
